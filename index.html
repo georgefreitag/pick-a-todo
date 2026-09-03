@@ -273,7 +273,7 @@
   li.picked .text { color: var(--pen-red); }
   li.picked .num { color: var(--pen-red); }
 
-  .kill {
+  .kill, .edit-btn {
     flex: 0 0 auto;
     align-self: flex-start;
     height: var(--row);
@@ -289,8 +289,8 @@
     border-radius: 4px;
   }
   .kill:hover, .kill:focus-visible { opacity: 1; color: var(--ink); }
-  .kill.edit-btn { width: 24px; font-size: 15px; opacity: .45; }
-  .kill.edit-btn:hover, .kill.edit-btn:focus-visible { opacity: 1; }
+  .edit-btn { width: 24px; font-size: 15px; opacity: .45; }
+  .edit-btn:hover, .edit-btn:focus-visible { opacity: 1; color: var(--ink); }
 
   input.edit-input {
     flex: 1 1 auto;
@@ -1083,21 +1083,52 @@
     try { localStorage.setItem(KEY, text); } catch (e) {}
   }
 
+  /* storage can hand back anything - an old shape, a half-written value,
+     or a value some other surface parsed for us. Take what is usable. */
+  function normalizeTodos(value) {
+    let list = [];
+    if (Array.isArray(value)) list = value;
+    else if (value && typeof value === 'object') list = Object.values(value);
+    return list
+      .filter(t => t && typeof t === 'object' && typeof t.text === 'string' && t.text.trim())
+      .map(t => ({
+        id: (typeof t.id === 'string' || typeof t.id === 'number') ? String(t.id) : newId(),
+        text: String(t.text).slice(0, 200),
+        done: !!t.done
+      }));
+  }
+
+  function normalizeSettings(value) {
+    const out = Object.assign({}, DEFAULTS);
+    if (!value || typeof value !== 'object') return out;
+    const clamp = (v, lo, hi, fallback) => {
+      const num = parseInt(v, 10);
+      return Number.isFinite(num) ? Math.min(hi, Math.max(lo, num)) : fallback;
+    };
+    out.pomodoro = clamp(value.pomodoro, 1, 180, DEFAULTS.pomodoro);
+    out.creativeAfter = clamp(value.creativeAfter, 1, 20, DEFAULTS.creativeAfter);
+    out.creativeLen = clamp(value.creativeLen, 1, 120, DEFAULTS.creativeLen);
+    out.manual = value.manual === undefined ? DEFAULTS.manual : !!value.manual;
+    return out;
+  }
+
   async function load() {
     const raw = await readStore();
     if (raw) {
       try {
-        const data = JSON.parse(raw);
+        const data = typeof raw === 'string' ? JSON.parse(raw) : raw;
         if (Array.isArray(data)) {
-          todos = data;
-        } else {
-          todos = data.todos || [];
-          settings = Object.assign({}, DEFAULTS, data.settings || {});
+          todos = normalizeTodos(data);
+        } else if (data && typeof data === 'object') {
+          todos = normalizeTodos(data.todos);
+          settings = normalizeSettings(data.settings);
           creative = !!data.creative;
-          completedCount = data.completed || 0;
-          pendingTimer = data.timer || null;
+          completedCount = Number.isFinite(data.completed) ? data.completed : 0;
+          pendingTimer = (data.timer && typeof data.timer === 'object') ? data.timer : null;
         }
-      } catch (e) { todos = []; }
+      } catch (e) {
+        todos = [];
+      }
     }
     applyMode();
     render();
@@ -1225,6 +1256,7 @@
   }
 
   function render() {
+    if (!Array.isArray(todos)) todos = normalizeTodos(todos);
     listEl.innerHTML = '';
     todos.forEach((todo, i) => {
       const li = document.createElement('li');
@@ -1275,7 +1307,7 @@
         li.append(num, text, kill);
       } else {
         const pencil = document.createElement('button');
-        pencil.className = 'kill edit-btn';
+        pencil.className = 'edit-btn';
         pencil.type = 'button';
         pencil.textContent = '\u270e';
         pencil.title = 'Edit this one';
