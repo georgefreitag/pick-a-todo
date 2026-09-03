@@ -57,7 +57,8 @@
     width: 100%;
     max-width: 604px;
     padding-top: var(--coil-pad);
-    perspective: 1500px;
+    perspective: 1150px;
+    perspective-origin: 50% 0;
     transform: translateX(3.2%) rotate(1.7deg);
   }
 
@@ -91,10 +92,11 @@
     opacity: .8;
   }
 
-  .page.tearing { animation: tear .6s cubic-bezier(.5,0,.75,.4) forwards; }
+  .page.tearing { animation: tear .62s cubic-bezier(.45,0,.7,.45) forwards; }
   @keyframes tear {
-    40%  { transform: rotateX(-38deg) translateY(-4px); opacity: 1; }
-    100% { transform: rotateX(-118deg) translateY(-14px); opacity: 0; }
+    0%   { transform: rotateX(0deg); opacity: 1; }
+    45%  { transform: rotateX(36deg); opacity: 1; }
+    100% { transform: rotateX(92deg); opacity: 0; }
   }
   .page.fresh { animation: settle .32s ease-out; }
   @keyframes settle {
@@ -680,13 +682,6 @@
   @keyframes bobb  { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
   @keyframes scritch { 0%, 100% { transform: rotate(14deg) translateY(0); } 50% { transform: rotate(3deg) translateY(-4px); } }
 
-  /* flyer: rocket for work, star for creativity */
-  .track .flyer { transform: translateX(-50%); }
-  .track .flyer .ico-rocket { transform: rotate(90deg); }
-  .track .flyer .ico-star { display: none; animation: twirl 4s linear infinite; }
-  .postit.creative .track .flyer .ico-rocket { display: none; }
-  .postit.creative .track .flyer .ico-star { display: block; }
-  .postit.creative .track .flyer .ico-star { fill: rgba(43,48,80,.18); }
   @keyframes twirl { to { transform: rotate(360deg); } }
 
   /* settings */
@@ -775,11 +770,17 @@
     position: absolute;
     top: 4px;
     width: 26px; height: 26px;
-    transform: translateX(-50%) rotate(90deg);
+    transform: translateX(-50%);
     transition: left .35s linear;
   }
   .track .flyer svg { width: 100%; height: 100%; fill: none; stroke: #2b3050; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
   .postit:not(.paused) .track .flyer { animation: bob 1.4s ease-in-out infinite; }
+
+  /* rocket flies nose-first to the right; the star just turns */
+  .track .flyer .ico-rocket { transform: rotate(90deg); }
+  .track .flyer .ico-star { display: none; animation: twirl 4s linear infinite; }
+  .postit.creative .track .flyer .ico-rocket { display: none; }
+  .postit.creative .track .flyer .ico-star { display: block; fill: rgba(43,48,80,.18); }
   @keyframes bob {
     0%, 100% { margin-top: 0; }
     50% { margin-top: -4px; }
