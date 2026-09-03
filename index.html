@@ -1,6 +1,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Pick a To-Do!</title>
+<title>To Dos</title>
 <meta name="description" content="A notebook pad that picks one of your to-dos with a die roll.">
 <meta name="theme-color" content="#443d33">
 <meta name="mobile-web-app-capable" content="yes">
@@ -163,6 +163,56 @@
     padding-bottom: 8px;
     margin-bottom: 3px;
   }
+
+  .mode-toggle {
+    position: absolute;
+    top: calc(var(--top-pad) - 24px);
+    right: 14px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    font-family: "Kalam", cursive;
+    font-size: 13px;
+    line-height: 1;
+    text-align: left;
+    color: var(--pencil);
+    background: none;
+    border: 0;
+    padding: 3px 2px 5px;
+    cursor: pointer;
+  }
+  .mode-toggle:hover { color: var(--ink); }
+  .mode-toggle svg {
+    flex: 0 0 auto;
+    width: 19px; height: 19px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    transition: transform .3s ease;
+  }
+  .mode-toggle:hover svg { transform: rotate(-14deg) scale(1.12); }
+  body.creative .mode-toggle { color: #7a5fa8; }
+  body.creative .mode-toggle svg { fill: rgba(160,120,215,.28); }
+
+  /* stars beside the title in creativity mode */
+  .title-stars { display: none; margin-left: 4px; white-space: nowrap; }
+  body.creative .title-stars { display: inline-block; }
+  .title-stars svg {
+    width: 16px; height: 16px;
+    fill: rgba(160,120,215,.3);
+    stroke: #7a5fa8;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    vertical-align: 2px;
+  }
+  .title-stars svg:nth-child(2) { width: 11px; height: 11px; vertical-align: 9px; }
+  .title-stars svg:nth-child(3) { width: 13px; height: 13px; vertical-align: -2px; }
+  body.creative h1 { color: #40356b; }
+  .mode-tag { display: none; font-size: .52em; font-weight: 400; color: #7a5fa8; white-space: nowrap; }
+  body.creative .mode-tag { display: inline; }
 
   .lines {
     background-image: repeating-linear-gradient(
@@ -448,14 +498,42 @@
   .doodles .faint { opacity: .3; }
   .doodles .dash { stroke-dasharray: 4 5; }
 
-  .doodles-top { top: calc(var(--top-pad) - 38px); right: 10px; width: 148px; height: 78px; }
-  .doodles-top .ufo-sm { right: 0; top: 2px; width: 66px; height: 39px; }
-  .doodles-top .bolt-zig { right: 66px; top: 8px; width: 25px; height: 42px; }
+  .doodles-top { top: calc(var(--top-pad) - 6px); left: 300px; width: 62px; height: 40px; }
+  body.creative .doodles-top { display: none; }
+  .doodles-top .ufo-sm { right: 0; top: 0; width: 58px; height: 34px; }
 
-  .doodles-bottom { left: 48px; right: 14px; bottom: 10px; height: 62px; }
+  .doodles-margin { top: calc(var(--top-pad) + 4px); left: 6px; width: 34px; height: 48px; }
+  .doodles-margin .bolt-zig { left: 4px; top: 0; width: 22px; height: 38px; }
+
+  .doodles-bottom { left: 48px; right: 58px; bottom: 10px; height: 62px; }
   .doodles-bottom .bolt-fat { left: 2%; bottom: 3px; width: 35px; height: 55px; }
   .doodles-bottom .rocket { left: 28%; bottom: 1px; width: 42px; height: 62px; }
   .doodles-bottom .ufo-beam { right: 0; bottom: 0; width: 90px; height: 62px; }
+
+  .gear-btn {
+    position: absolute;
+    right: 14px; bottom: 14px;
+    width: 32px; height: 32px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--ink);
+    cursor: pointer;
+    opacity: .45;
+    transition: opacity .18s ease;
+  }
+  .gear-btn:hover, .gear-btn:focus-visible { opacity: .95; }
+  .gear-btn svg {
+    width: 100%; height: 100%;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    transform-origin: 50% 50%;
+    transition: transform .6s ease;
+  }
+  .gear-btn:hover svg, .gear-btn:focus-visible svg { transform: rotate(45deg); }
 
   @media (max-width: 620px) {
     .doodles-top { display: none; }
@@ -527,8 +605,107 @@
     font-size: 15px;
     background: rgba(255,255,255,.32);
   }
+  .note-btn.squeeze[hidden] { display: none; }
   .note-btn.squeeze:disabled { opacity: .45; cursor: default; background: rgba(255,255,255,.2); }
   .note-q { font-size: 19px; margin: 4px 0 14px; text-align: center; }
+
+  .postit.chooser {
+    z-index: 7;
+    width: 208px;
+    background: linear-gradient(158deg, #cfe9c2 0%, #bce0ac 60%, #abd69b 100%);
+    transform: translate(-54%, -60%) rotate(-4.5deg);
+    animation: stick-choose .28s cubic-bezier(.2,1.35,.4,1);
+  }
+  @keyframes stick-choose {
+    from { transform: translate(-54%, -60%) rotate(-11deg) scale(.82); opacity: 0; }
+    to   { transform: translate(-54%, -60%) rotate(-4.5deg) scale(1); opacity: 1; }
+  }
+
+  /* creativity session + its invitation */
+  .postit.creative {
+    background: linear-gradient(158deg, #cbe9f8 0%, #b1dcf1 60%, #9bd0ea 100%);
+  }
+  .postit.invite {
+    z-index: 8;
+    width: 246px;
+    background: linear-gradient(158deg, #cbe9f8 0%, #b1dcf1 60%, #9bd0ea 100%);
+    transform: translate(-50%, -50%) rotate(-2.5deg);
+    animation: stick-invite .34s cubic-bezier(.2,1.35,.4,1);
+  }
+  @keyframes stick-invite {
+    from { transform: translate(-50%, -50%) rotate(-9deg) scale(.8); opacity: 0; }
+    to   { transform: translate(-50%, -50%) rotate(-2.5deg) scale(1); opacity: 1; }
+  }
+  .postit.invite .note-q { font-size: 20px; font-weight: 700; margin: 2px 0 6px; }
+
+  .invite-doodles {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 16px;
+    height: 66px;
+    margin: 0 0 12px;
+  }
+  .invite-doodles svg {
+    fill: none;
+    stroke: #2b3050;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: .8;
+    transform-origin: 50% 90%;
+  }
+  .invite-doodles .g { width: 30px; height: 60px; animation: sway 2.8s ease-in-out infinite; }
+  .invite-doodles .bk { width: 48px; height: 40px; animation: bobb 2.2s ease-in-out infinite; }
+  .invite-doodles .pn { width: 18px; height: 56px; animation: scritch 1.9s ease-in-out infinite; }
+  @keyframes sway  { 0%, 100% { transform: rotate(-7deg); } 50% { transform: rotate(6deg); } }
+  @keyframes bobb  { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+  @keyframes scritch { 0%, 100% { transform: rotate(14deg) translateY(0); } 50% { transform: rotate(3deg) translateY(-4px); } }
+
+  /* flyer: rocket for work, star for creativity */
+  .track .flyer { transform: translateX(-50%); }
+  .track .flyer .ico-rocket { transform: rotate(90deg); }
+  .track .flyer .ico-star { display: none; animation: twirl 4s linear infinite; }
+  .postit.creative .track .flyer .ico-rocket { display: none; }
+  .postit.creative .track .flyer .ico-star { display: block; }
+  .postit.creative .track .flyer .ico-star { fill: rgba(43,48,80,.18); }
+  @keyframes twirl { to { transform: rotate(360deg); } }
+
+  /* settings */
+  dialog.ask.settings { max-width: 322px; transform: rotate(1.2deg); }
+  .set-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 17px;
+    margin: 0 0 12px;
+  }
+  .set-row input[type="number"] {
+    width: 62px;
+    font: inherit;
+    font-size: 17px;
+    text-align: center;
+    color: var(--ink);
+    background: rgba(255,255,255,.55);
+    border: 1px solid rgba(36,64,110,.4);
+    border-radius: 3px;
+    padding: 4px 2px;
+  }
+  .set-row .unit { color: var(--pencil); font-size: 15px; margin-left: -8px; }
+  .set-row.toggle { cursor: pointer; }
+  .set-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ink); cursor: pointer; }
+
+  /* the running note recedes while the choice is open */
+  .postit.dimmed { opacity: .5; filter: saturate(.75); pointer-events: none; }
+  .postit.chooser .note-q { margin: 2px 0 12px; padding-right: 16px; font-weight: 700; }
+  .note-actions.col { flex-direction: column; align-items: stretch; }
+
+  /* while you're choosing by hand */
+  .picking button.text {
+    background: rgba(147,169,212,.32);
+    box-shadow: 0 0 0 3px rgba(147,169,212,.32);
+  }
   .note-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
 
   .note-btn {
@@ -608,7 +785,9 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .page.tearing, .page.fresh, .cube.spinning { animation: none; }
+    .page.tearing, .page.fresh, .cube.spinning,
+    .invite-doodles svg, .track .flyer .ico-star { animation: none; }
+    .gear-btn svg { transition: none; }
     .ring path { animation: none; stroke-dashoffset: 0; }
     .roll, .doodles svg { transition: none; }
   }
@@ -629,15 +808,28 @@
           <circle class="fill" cx="54" cy="23" r="2"/>
           <path class="faint" d="M3,17 L0,15 M4,28 L1,31 M74,17 L77,14"/>
         </svg>
-        <svg class="doodle bolt-zig" viewBox="0 0 30 50">
+      </div>
+
+      <div class="doodles doodles-margin" aria-hidden="true">
+        <svg class="doodle bolt-zig" data-tilt="-17" viewBox="0 0 30 50">
           <path d="M21,2 L4,26 L13,27 L7,48 L27,22 L17,21 L21,2"/>
           <path class="faint" d="M1,8 L0,3 M28,38 L30,43"/>
         </svg>
       </div>
 
       <div class="head">
-        <h1>Today's To-Dos <span class="date" id="today"></span></h1>
+        <h1>Today's To-Dos<span class="mode-tag"> (Creativity mode!)</span><span class="title-stars" aria-hidden="true">
+            <svg viewBox="0 0 40 40"><path d="M20,3 L25,15 L38,16 L28,25 L31,37 L20,30 L9,37 L12,25 L2,16 L15,15 Z"/></svg>
+            <svg viewBox="0 0 40 40"><path d="M20,3 L25,15 L38,16 L28,25 L31,37 L20,30 L9,37 L12,25 L2,16 L15,15 Z"/></svg>
+            <svg viewBox="0 0 40 40"><path d="M20,3 L25,15 L38,16 L28,25 L31,37 L20,30 L9,37 L12,25 L2,16 L15,15 Z"/></svg>
+          </span>
+          <span class="date" id="today"></span></h1>
       </div>
+
+      <button class="mode-toggle" id="modeToggle">
+          <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20,3 L25,15 L38,16 L28,25 L31,37 L20,30 L9,37 L12,25 L2,16 L15,15 Z"/></svg>
+        <span id="modeLabel">Enter creativity mode?</span>
+      </button>
 
       <div class="lines">
         <ol id="list"></ol>
@@ -683,9 +875,53 @@
           <path class="dash" d="M26,66 C36,72 72,72 82,66"/>
           <path class="faint" d="M6,10 L2,6 M99,9 L104,4 M8,32 L3,35"/>
         </svg>
+
       </div>
 
-  <div class="postit" id="postit" hidden>
+      <button class="gear-btn" id="gearBtn" aria-label="Settings" title="Settings">
+        <svg viewBox="0 0 40 40" aria-hidden="true">
+          <path d="M20.0,7.4 L21.97,7.56 L23.89,8.02 L27.69,3.51 L29.91,4.74 L31.7,6.06 L28.91,11.09 L30.19,12.59 L31.23,14.28 L37.1,13.78 L37.8,16.22 L38.13,18.41 L32.6,20.0 L32.44,21.97 L31.98,23.89 L36.49,27.69 L35.26,29.91 L33.94,31.7 L28.91,28.91 L27.41,30.19 L25.72,31.23 L26.22,37.1 L23.78,37.8 L21.59,38.13 L20.0,32.6 L18.03,32.44 L16.11,31.98 L12.31,36.49 L10.09,35.26 L8.3,33.94 L11.09,28.91 L9.81,27.41 L8.77,25.72 L2.9,26.22 L2.2,23.78 L1.87,21.59 L7.4,20.0 L7.56,18.03 L8.02,16.11 L3.51,12.31 L4.74,10.09 L6.06,8.3 L11.09,11.09 L12.59,9.81 L14.28,8.77 L13.78,2.9 L16.22,2.2 L18.41,1.87 Z"/>
+          <circle cx="20" cy="20" r="5.4"/>
+        </svg>
+      </button>
+
+  <div class="postit invite" id="invite" hidden>
+        <p class="note-q">Time for a Creativity session!</p>
+        <div class="invite-doodles" aria-hidden="true">
+          <svg class="g" viewBox="0 0 30 60">
+            <path d="M15,3 L15,26"/>
+            <path d="M11.5,2 L18.5,2 L18.5,8 L11.5,8 Z"/>
+            <path d="M15,26 C9,26 5,30 5,35 C5,39 8,41 8,44 C8,48 3,50 3,54 C3,58 8,58 15,58 C22,58 27,58 27,54 C27,50 22,48 22,44 C22,41 25,39 25,35 C25,30 21,26 15,26"/>
+            <circle cx="15" cy="47" r="4"/>
+            <path d="M12.5,6 L14,26 M17.5,6 L16,26"/>
+          </svg>
+          <svg class="bk" viewBox="0 0 48 40">
+            <path d="M24,10 C19,5 10,4 3,6 L3,33 C10,31 19,32 24,37 C29,32 38,31 45,33 L45,6 C38,4 29,5 24,10"/>
+            <path d="M24,10 L24,37"/>
+            <path d="M8,13 C13,12 18,13 20,15 M8,20 C13,19 18,20 20,22 M28,15 C30,13 35,12 40,13 M28,22 C30,20 35,19 40,20"/>
+          </svg>
+          <svg class="pn" viewBox="0 0 18 56">
+            <path d="M4,6 L14,6 L14,44 L9,53 L4,44 Z"/>
+            <path d="M4,44 L14,44 M4,12 L14,12"/>
+            <path d="M9,53 L9,47"/>
+          </svg>
+        </div>
+        <div class="note-actions col">
+          <button class="note-btn primary" id="inviteYes">Take a creativity break</button>
+          <button class="note-btn" id="inviteNo">I'm not ready to be creative now</button>
+        </div>
+      </div>
+
+  <div class="postit chooser" id="chooser" hidden>
+        <button class="note-x" id="chooseCancel" aria-label="Never mind">×</button>
+        <p class="note-q">Squeeze in one more</p>
+        <div class="note-actions col">
+          <button class="note-btn primary" id="chooseRandom">Pick one at random</button>
+          <button class="note-btn" id="chooseManual">Let me pick one</button>
+        </div>
+      </div>
+
+      <div class="postit" id="postit" hidden>
     <button class="note-x" id="noteClose" aria-label="Dismiss note">×</button>
     <div class="note-tasks">
       <p class="note-task prev" id="notePrev" hidden></p>
@@ -705,7 +941,8 @@
       <div class="track">
         <span class="trail"></span>
         <span class="flyer" id="flyer">
-          <svg viewBox="0 0 50 74" aria-hidden="true">
+          <svg class="ico-star" viewBox="0 0 40 40" aria-hidden="true"><path d="M20,3 L25,15 L38,16 L28,25 L31,37 L20,30 L9,37 L12,25 L2,16 L15,15 Z"/></svg>
+          <svg class="ico-rocket" viewBox="0 0 50 74" aria-hidden="true">
             <path d="M25,3 C33,14 38,27 38,46 C31,49 19,49 12,46 C12,27 17,14 25,3"/>
             <path d="M12,34 C6,40 3,49 3,58 C7,53 10,49 12,46"/>
             <path d="M38,34 C44,40 47,49 47,58 C43,53 40,49 38,46"/>
@@ -741,6 +978,26 @@
     <p class="caption" id="caption">Rolling…</p>
   </div>
 </div>
+
+<dialog class="ask settings" id="settingsDlg">
+  <p>Settings</p>
+  <label class="set-row">Pomodoro timer length
+    <span><input type="number" id="setPomodoro" min="1" max="180" step="1"> <span class="unit">min</span></span>
+  </label>
+  <label class="set-row">Number of tasks for Creativity mode
+    <input type="number" id="setCount" min="1" max="20" step="1">
+  </label>
+  <label class="set-row">Creativity mode timer
+    <span><input type="number" id="setCreative" min="1" max="120" step="1"> <span class="unit">min</span></span>
+  </label>
+  <label class="set-row toggle">Allow manual selection
+    <input type="checkbox" id="setManual">
+  </label>
+  <div class="actions">
+    <button class="roll" id="setSave">Save</button>
+    <button class="cancel" id="setCancel">Cancel</button>
+  </div>
+</dialog>
 
 <dialog class="ask" id="ask">
   <p>Want to carry over your undone to-dos?</p>
@@ -799,18 +1056,42 @@
 
   const KEY = 'pad:sheet';
 
-  function load() {
+  async function readStore() {
     try {
-      const raw = localStorage.getItem(KEY);
-      if (raw) todos = JSON.parse(raw);
-    } catch (e) {
-      todos = [];
+      return localStorage.getItem(KEY);
+    } catch (e) { return null; }
+  }
+
+  function writeStore(text) {
+    try { localStorage.setItem(KEY, text); } catch (e) {}
+  }
+
+  async function load() {
+    const raw = await readStore();
+    if (raw) {
+      try {
+        const data = JSON.parse(raw);
+        if (Array.isArray(data)) {
+          todos = data;
+        } else {
+          todos = data.todos || [];
+          settings = Object.assign({}, DEFAULTS, data.settings || {});
+          creative = !!data.creative;
+          completedCount = data.completed || 0;
+        }
+      } catch (e) { todos = []; }
     }
+    applyMode();
     render();
   }
 
   function save() {
-    try { localStorage.setItem(KEY, JSON.stringify(todos)); } catch (e) {}
+    writeStore(JSON.stringify({
+      todos: todos,
+      settings: settings,
+      creative: creative,
+      completed: completedCount
+    }));
   }
 
   function newId() {
@@ -872,7 +1153,7 @@
       num.textContent = (i + 1) + '.';
 
       let text;
-      if (todo.done) {
+      if (todo.done || !settings.manual) {
         text = document.createElement('span');
       } else {
         text = document.createElement('button');
@@ -925,20 +1206,27 @@
   function toggle(id) {
     const todo = todos.find(t => t.id === id);
     if (!todo) return;
-    todo.done = !todo.done;
-    if (todo.done && id === noteTodoId) hideNote();
-    if (todo.done && pickedId === id) {
-      pickedId = null;
-      resultEl.className = 'result note';
-      resultEl.textContent = 'One less thing to do!';
+
+    if (todo.done) {
+      todo.done = false;
+      if (completedCount > 0) completedCount -= 1;
+      render();
+      save();
+      return;
     }
+
+    markDone(todo);
+    if (id === noteTodoId) hideNote();
     render();
     save();
+    doneMessage();
+    offerCreativeBreak();
   }
 
   function scribble() {
     document.querySelectorAll('.doodle').forEach(el => {
-      const r = (Math.random() * 15 - 7.5).toFixed(1);
+      const tilt = parseFloat(el.dataset.tilt || 0);
+      const r = (tilt + Math.random() * 11 - 5.5).toFixed(1);
       const x = (Math.random() * 12 - 6).toFixed(1);
       const y = (Math.random() * 8 - 4).toFixed(1);
       el.style.transform = 'translate(' + x + 'px,' + y + 'px) rotate(' + r + 'deg)';
@@ -1019,7 +1307,7 @@
     if (live.length === 0) {
       resultEl.className = 'result note';
       resultEl.textContent = todos.length
-        ? 'Everything is crossed off. Add something or start a new sheet.'
+        ? 'No more to-dos to do today. Go outside.'
         : 'Add a to-do first, then the die has something to land on.';
       inputEl.focus();
       return;
@@ -1082,12 +1370,24 @@
 
   /* ---- post-it pomodoro ---- */
 
-  const POMODORO = 25 * 60;
+  const DEFAULTS = { pomodoro: 25, creativeAfter: 4, creativeLen: 15, manual: true };
+  let settings = Object.assign({}, DEFAULTS);
+  let creative = false;
+  let completedCount = 0;
+  let creativeDue = false;
+  let sessionLen = DEFAULTS.pomodoro * 60;
+  let inCreativeSession = false;
 
   const postitEl = document.getElementById('postit');
   const noteTaskEl = document.getElementById('noteTask');
   const notePrevEl = document.getElementById('notePrev');
   const squeezeEl = document.getElementById('noteSqueeze');
+  const chooserEl = document.getElementById('chooser');
+  const inviteEl = document.getElementById('invite');
+  const modeLabelEl = document.getElementById('modeLabel');
+  const manualBtnEl = document.getElementById('chooseManual');
+  const hintEl = document.querySelector('.hint');
+  const settingsDlg = document.getElementById('settingsDlg');
   const noteAskEl = document.getElementById('noteAsk');
   const noteRunEl = document.getElementById('noteRun');
   const noteDoneEl = document.getElementById('noteDone');
@@ -1096,9 +1396,10 @@
   const pauseEl = document.getElementById('notePause');
 
   let noteTodoId = null;
+  let choosingByHand = false;
   let ticker = null;
   let endsAt = 0;
-  let left = POMODORO;
+  let left = DEFAULTS.pomodoro * 60;
   let running = false;
   let actx = null;
 
@@ -1115,6 +1416,10 @@
   }
 
   function showNote(todo) {
+    inCreativeSession = false;
+    postitEl.classList.remove('creative');
+    squeezeEl.hidden = false;
+    inviteEl.hidden = true;
     noteTodoId = todo.id;
     noteTaskEl.textContent = todo.text;
     noteTaskEl.classList.remove('empty');
@@ -1131,6 +1436,11 @@
 
   function hideNote() {
     stopTicker();
+    chooserEl.hidden = true;
+    postitEl.classList.remove('dimmed', 'creative');
+    inCreativeSession = false;
+    squeezeEl.hidden = false;
+    stopChoosingByHand();
     postitEl.hidden = true;
     postitEl.classList.remove('paused', 'ding');
     noteTodoId = null;
@@ -1143,7 +1453,7 @@
 
   function paint() {
     clockEl.textContent = mmss(left);
-    const pct = Math.min(100, Math.max(0, ((POMODORO - left) / POMODORO) * 100));
+    const pct = Math.min(100, Math.max(0, ((sessionLen - left) / sessionLen) * 100));
     flyerEl.style.left = pct + '%';
     pauseEl.textContent = running ? 'Pause' : 'Resume';
     if (!running) squeezeEl.disabled = true;
@@ -1158,6 +1468,7 @@
   }
 
   function startTimer(seconds) {
+    sessionLen = Math.max(1, seconds);
     left = seconds;
     endsAt = Date.now() + seconds * 1000;
     running = true;
@@ -1181,6 +1492,9 @@
 
   function timesUp() {
     stopTicker();
+    chooserEl.hidden = true;
+    postitEl.classList.remove('dimmed');
+    stopChoosingByHand();
     paint();
     noteState('done');
     postitEl.classList.remove('paused');
@@ -1221,14 +1535,14 @@
 
   document.getElementById('noteYes').addEventListener('click', () => {
     primeAudio();
-    startTimer(POMODORO);
+    startTimer(settings.pomodoro * 60);
   });
 
   document.getElementById('noteNo').addEventListener('click', hideNote);
   document.getElementById('noteClose').addEventListener('click', hideNote);
   pauseEl.addEventListener('click', togglePause);
 
-  document.getElementById('noteMore').addEventListener('click', () => startTimer(POMODORO));
+  document.getElementById('noteMore').addEventListener('click', () => startTimer(sessionLen));
 
   /* hand the note its next task, keeping one crossed-off line above it */
   function noteNext(todo) {
@@ -1240,56 +1554,213 @@
     squeezeEl.disabled = false;
   }
 
+  function markDone(todo) {
+    if (!todo || todo.done) return;
+    todo.done = true;
+    if (pickedId === todo.id) pickedId = null;
+    completedCount += 1;
+    if (creative && completedCount >= settings.creativeAfter) {
+      completedCount = 0;
+      creativeDue = true;
+    }
+  }
+
+  /* the sheet is clear when nothing is left undone */
+  function doneMessage() {
+    resultEl.className = 'result note';
+    resultEl.textContent = todos.length && !todos.some(t => !t.done)
+      ? 'No more to-dos to do today. Go outside.'
+      : 'One less to-do to do.';
+  }
+
+  function offerCreativeBreak() {
+    if (!creativeDue) return false;
+    if (running || !postitEl.hidden) return false;
+    creativeDue = false;
+    inviteEl.hidden = false;
+    document.getElementById('inviteYes').focus();
+    return true;
+  }
+
+  function crossOffCurrent() {
+    const current = todos.find(t => t.id === noteTodoId);
+    if (!current) return;
+    markDone(current);
+    render();
+    save();
+  }
+
+  function noteEmptyState(message) {
+    notePrevEl.textContent = noteTaskEl.textContent;
+    notePrevEl.hidden = false;
+    noteTaskEl.textContent = message;
+    noteTaskEl.classList.add('empty');
+    noteTodoId = null;
+  }
+
   function squeezeAnother() {
     if (rolling || !running) return;
 
-    const current = todos.find(t => t.id === noteTodoId);
-    if (current) {
-      current.done = true;
-      if (pickedId === current.id) pickedId = null;
-      render();
-      save();
-    }
-
-    if (todos.some(t => !t.done)) {
-      roll(true);
+    /* is there anything else to move on to? */
+    const others = todos.filter(t => !t.done && t.id !== noteTodoId);
+    if (others.length === 0) {
+      crossOffCurrent();
+      noteEmptyState('Nothing left to pick.');
+      squeezeEl.disabled = true;
+      doneMessage();
+      offerCreativeBreak();
       return;
     }
 
-    /* nothing left on the sheet to move on to */
-    notePrevEl.textContent = noteTaskEl.textContent;
-    notePrevEl.hidden = false;
-    noteTaskEl.textContent = 'Nothing left to pick.';
-    noteTaskEl.classList.add('empty');
-    noteTodoId = null;
     squeezeEl.disabled = true;
+    chooserEl.hidden = false;
+    postitEl.classList.add('dimmed');
+    document.getElementById('chooseRandom').focus();
+  }
+
+  function closeChooser() {
+    chooserEl.hidden = true;
+    postitEl.classList.remove('dimmed');
+    if (running && noteTodoId) squeezeEl.disabled = false;
+  }
+
+  document.getElementById('chooseRandom').addEventListener('click', () => {
+    closeChooser();
+    crossOffCurrent();
+    roll(true);
+  });
+
+  document.getElementById('chooseManual').addEventListener('click', () => {
+    closeChooser();
+    crossOffCurrent();
+    choosingByHand = true;
+    postitEl.hidden = true;
+    document.body.classList.add('picking');
     resultEl.className = 'result note';
-    resultEl.textContent = 'Everything is crossed off.';
+    resultEl.textContent = 'Tap your next to-do — the timer is still running.';
+  });
+
+  document.getElementById('chooseCancel').addEventListener('click', closeChooser);
+
+  function stopChoosingByHand() {
+    if (!choosingByHand) return;
+    choosingByHand = false;
+    document.body.classList.remove('picking');
+    postitEl.hidden = false;
   }
 
   squeezeEl.addEventListener('click', squeezeAnother);
 
   function completeCurrent() {
     const todo = todos.find(t => t.id === noteTodoId);
+    const wasCreative = inCreativeSession;
+    markDone(todo);
     hideNote();
     if (todo) {
-      todo.done = true;
-      if (pickedId === todo.id) pickedId = null;
       render();
       save();
+      doneMessage();
+    } else if (wasCreative) {
       resultEl.className = 'result note';
-      resultEl.textContent = 'One less thing to do!';
+      resultEl.textContent = 'Back to it.';
     }
+    offerCreativeBreak();
   }
 
   document.getElementById('noteFinish').addEventListener('click', completeCurrent);
   document.getElementById('noteStop').addEventListener('click', completeCurrent);
 
+  /* ---- creativity mode ---- */
+
+  function applyMode() {
+    document.body.classList.toggle('creative', creative);
+    modeLabelEl.textContent = creative ? 'Go back to regular mode' : 'Enter creativity mode?';
+    hintEl.hidden = !settings.manual;
+    manualBtnEl.hidden = !settings.manual;
+  }
+
+  document.getElementById('modeToggle').addEventListener('click', () => {
+    creative = !creative;
+    completedCount = 0;
+    creativeDue = false;
+    applyMode();
+    save();
+    resultEl.className = 'result note';
+    resultEl.textContent = creative
+      ? 'Creativity mode on. A break comes after ' + settings.creativeAfter + ' to-dos.'
+      : 'Back to regular mode.';
+  });
+
+  function startCreativeSession() {
+    inviteEl.hidden = true;
+    inCreativeSession = true;
+    noteTodoId = null;
+    postitEl.classList.add('creative');
+    postitEl.classList.remove('dimmed');
+    noteTaskEl.textContent = 'Creativity break';
+    noteTaskEl.classList.remove('empty');
+    notePrevEl.hidden = true;
+    squeezeEl.hidden = true;
+    postitEl.hidden = false;
+    primeAudio();
+    startTimer(settings.creativeLen * 60);
+    try {
+      postitEl.scrollIntoView({ block: 'center', behavior: reduced() ? 'auto' : 'smooth' });
+    } catch (e) {}
+  }
+
+  document.getElementById('inviteYes').addEventListener('click', startCreativeSession);
+  document.getElementById('inviteNo').addEventListener('click', () => {
+    inviteEl.hidden = true;
+    resultEl.className = 'result note';
+    resultEl.textContent = 'No problem — the break will come back around.';
+  });
+
+  /* ---- settings ---- */
+
+  document.getElementById('gearBtn').addEventListener('click', () => {
+    document.getElementById('setPomodoro').value = settings.pomodoro;
+    document.getElementById('setCount').value = settings.creativeAfter;
+    document.getElementById('setCreative').value = settings.creativeLen;
+    document.getElementById('setManual').checked = settings.manual;
+    settingsDlg.showModal();
+  });
+
+  document.getElementById('setCancel').addEventListener('click', () => settingsDlg.close());
+
+  document.getElementById('setSave').addEventListener('click', () => {
+    const num = (id, lo, hi, fallback) => {
+      const v = parseInt(document.getElementById(id).value, 10);
+      return Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : fallback;
+    };
+    settings.pomodoro = num('setPomodoro', 1, 180, DEFAULTS.pomodoro);
+    settings.creativeAfter = num('setCount', 1, 20, DEFAULTS.creativeAfter);
+    settings.creativeLen = num('setCreative', 1, 120, DEFAULTS.creativeLen);
+    settings.manual = document.getElementById('setManual').checked;
+    settingsDlg.close();
+    applyMode();
+    render();
+    save();
+    resultEl.className = 'result note';
+    resultEl.textContent = 'Settings saved.';
+  });
+
   /* pick a task by hand instead of by die */
   function startTask(id) {
-    if (rolling) return;
+    if (rolling || !settings.manual) return;
     const todo = todos.find(t => t.id === id);
     if (!todo || todo.done) return;
+
+    /* mid-pomodoro hand-pick: the clock never stopped */
+    if (choosingByHand) {
+      stopChoosingByHand();
+      pickedId = todo.id;
+      render();
+      noteNext(todo);
+      resultEl.className = 'result';
+      resultEl.textContent = 'Now on number ' + (todos.indexOf(todo) + 1) + ': ' + todo.text;
+      return;
+    }
 
     hideNote();
     pickedId = todo.id;
