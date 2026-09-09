@@ -562,10 +562,19 @@
   }
 
   /* post-it timer */
-  .postit {
+  .notes-layer {
     position: absolute;
     left: 50%; top: 50%;
+    width: 0; height: 0;
     z-index: 6;
+  }
+  .notes-layer.dragging { cursor: grabbing; }
+
+  .postit {
+    position: absolute;
+    left: 0; top: 0;
+    cursor: grab;
+    touch-action: none;
     width: 236px;
     padding: 14px 16px 16px;
     background: linear-gradient(158deg, #fdb7c0 0%, #f89dab 60%, #f08d9e 100%);
@@ -628,6 +637,9 @@
   .note-btn.squeeze[hidden] { display: none; }
   .note-btn.squeeze:disabled { opacity: .45; cursor: default; background: rgba(255,255,255,.2); }
   .note-q { font-size: 19px; margin: 4px 0 14px; text-align: center; }
+
+  .notes-layer.dragging .postit { cursor: grabbing; }
+  .postit button, .postit input { cursor: pointer; }
 
   .postit.chooser {
     z-index: 7;
@@ -910,87 +922,89 @@
         </svg>
       </button>
 
-  <div class="postit invite" id="invite" hidden>
-        <p class="note-q">Time for a Creativity session!</p>
-        <div class="invite-doodles" aria-hidden="true">
-          <svg class="g" viewBox="0 0 30 60">
-            <path d="M15,3 L15,26"/>
-            <path d="M11.5,2 L18.5,2 L18.5,8 L11.5,8 Z"/>
-            <path d="M15,26 C9,26 5,30 5,35 C5,39 8,41 8,44 C8,48 3,50 3,54 C3,58 8,58 15,58 C22,58 27,58 27,54 C27,50 22,48 22,44 C22,41 25,39 25,35 C25,30 21,26 15,26"/>
-            <circle cx="15" cy="47" r="4"/>
-            <path d="M12.5,6 L14,26 M17.5,6 L16,26"/>
-          </svg>
-          <svg class="bk" viewBox="0 0 48 40">
-            <path d="M24,10 C19,5 10,4 3,6 L3,33 C10,31 19,32 24,37 C29,32 38,31 45,33 L45,6 C38,4 29,5 24,10"/>
-            <path d="M24,10 L24,37"/>
-            <path d="M8,13 C13,12 18,13 20,15 M8,20 C13,19 18,20 20,22 M28,15 C30,13 35,12 40,13 M28,22 C30,20 35,19 40,20"/>
-          </svg>
-          <svg class="pn" viewBox="0 0 18 56">
-            <path d="M4,6 L14,6 L14,44 L9,53 L4,44 Z"/>
-            <path d="M4,44 L14,44 M4,12 L14,12"/>
-            <path d="M9,53 L9,47"/>
-          </svg>
-        </div>
-        <div class="note-actions col">
-          <button class="note-btn primary" id="inviteYes">Take a creativity break</button>
-          <button class="note-btn" id="inviteNo">I'm not ready to be creative now</button>
-        </div>
+      <div class="notes-layer" id="notesLayer">
+      <div class="postit invite" id="invite" hidden>
+      <p class="note-q">Time for a Creativity session!</p>
+      <div class="invite-doodles" aria-hidden="true">
+      <svg class="g" viewBox="0 0 30 60">
+      <path d="M15,3 L15,26"/>
+      <path d="M11.5,2 L18.5,2 L18.5,8 L11.5,8 Z"/>
+      <path d="M15,26 C9,26 5,30 5,35 C5,39 8,41 8,44 C8,48 3,50 3,54 C3,58 8,58 15,58 C22,58 27,58 27,54 C27,50 22,48 22,44 C22,41 25,39 25,35 C25,30 21,26 15,26"/>
+      <circle cx="15" cy="47" r="4"/>
+      <path d="M12.5,6 L14,26 M17.5,6 L16,26"/>
+      </svg>
+      <svg class="bk" viewBox="0 0 48 40">
+      <path d="M24,10 C19,5 10,4 3,6 L3,33 C10,31 19,32 24,37 C29,32 38,31 45,33 L45,6 C38,4 29,5 24,10"/>
+      <path d="M24,10 L24,37"/>
+      <path d="M8,13 C13,12 18,13 20,15 M8,20 C13,19 18,20 20,22 M28,15 C30,13 35,12 40,13 M28,22 C30,20 35,19 40,20"/>
+      </svg>
+      <svg class="pn" viewBox="0 0 18 56">
+      <path d="M4,6 L14,6 L14,44 L9,53 L4,44 Z"/>
+      <path d="M4,44 L14,44 M4,12 L14,12"/>
+      <path d="M9,53 L9,47"/>
+      </svg>
+      </div>
+      <div class="note-actions col">
+      <button class="note-btn primary" id="inviteYes">Take a creativity break</button>
+      <button class="note-btn" id="inviteNo">I'm not ready to be creative now</button>
+      </div>
       </div>
 
-  <div class="postit chooser" id="chooser" hidden>
-        <button class="note-x" id="chooseCancel" aria-label="Never mind">×</button>
-        <p class="note-q">Squeeze in one more</p>
-        <div class="note-actions col">
-          <button class="note-btn primary" id="chooseRandom">Pick one at random</button>
-          <button class="note-btn" id="chooseManual">Let me pick one</button>
-        </div>
+      <div class="postit chooser" id="chooser" hidden>
+      <button class="note-x" id="chooseCancel" aria-label="Never mind">×</button>
+      <p class="note-q">Squeeze in one more</p>
+      <div class="note-actions col">
+      <button class="note-btn primary" id="chooseRandom">Pick one at random</button>
+      <button class="note-btn" id="chooseManual">Let me pick one</button>
+      </div>
       </div>
 
       <div class="postit" id="postit" hidden>
-    <button class="note-x" id="noteClose" aria-label="Dismiss note">×</button>
-    <div class="note-tasks">
+      <button class="note-x" id="noteClose" aria-label="Dismiss note">×</button>
+      <div class="note-tasks">
       <p class="note-task prev" id="notePrev" hidden></p>
       <p class="note-task" id="noteTask"></p>
-    </div>
+      </div>
 
-    <div id="noteAsk">
+      <div id="noteAsk">
       <p class="note-q">Start the timer?</p>
       <div class="note-actions">
-        <button class="note-btn primary" id="noteYes">Yes</button>
-        <button class="note-btn" id="noteNo">No</button>
+      <button class="note-btn primary" id="noteYes">Yes</button>
+      <button class="note-btn" id="noteNo">No</button>
       </div>
-    </div>
+      </div>
 
-    <div id="noteRun" hidden>
+      <div id="noteRun" hidden>
       <p class="clock" id="clock">25:00</p>
       <div class="track">
-        <span class="trail"></span>
-        <span class="flyer" id="flyer">
-          <svg class="ico-star" viewBox="0 0 40 40" aria-hidden="true"><path d="M20,3 L25,15 L38,16 L28,25 L31,37 L20,30 L9,37 L12,25 L2,16 L15,15 Z"/></svg>
-          <svg class="ico-rocket" viewBox="0 0 50 74" aria-hidden="true">
-            <path d="M25,3 C33,14 38,27 38,46 C31,49 19,49 12,46 C12,27 17,14 25,3"/>
-            <path d="M12,34 C6,40 3,49 3,58 C7,53 10,49 12,46"/>
-            <path d="M38,34 C44,40 47,49 47,58 C43,53 40,49 38,46"/>
-            <circle cx="25" cy="24" r="5"/>
-            <path d="M16,50 C18,58 21,64 25,71 C29,64 32,58 34,50"/>
-          </svg>
-        </span>
+      <span class="trail"></span>
+      <span class="flyer" id="flyer">
+      <svg class="ico-star" viewBox="0 0 40 40" aria-hidden="true"><path d="M20,3 L25,15 L38,16 L28,25 L31,37 L20,30 L9,37 L12,25 L2,16 L15,15 Z"/></svg>
+      <svg class="ico-rocket" viewBox="0 0 50 74" aria-hidden="true">
+      <path d="M25,3 C33,14 38,27 38,46 C31,49 19,49 12,46 C12,27 17,14 25,3"/>
+      <path d="M12,34 C6,40 3,49 3,58 C7,53 10,49 12,46"/>
+      <path d="M38,34 C44,40 47,49 47,58 C43,53 40,49 38,46"/>
+      <circle cx="25" cy="24" r="5"/>
+      <path d="M16,50 C18,58 21,64 25,71 C29,64 32,58 34,50"/>
+      </svg>
+      </span>
       </div>
       <div class="note-actions">
-        <button class="note-btn" id="notePause">Pause</button>
-        <button class="note-btn" id="noteStop">All done?</button>
+      <button class="note-btn" id="notePause">Pause</button>
+      <button class="note-btn" id="noteStop">All done?</button>
       </div>
       <button class="note-btn squeeze" id="noteSqueeze">Finished? Squeeze in one more?</button>
-    </div>
+      </div>
 
-    <div id="noteDone" hidden>
+      <div id="noteDone" hidden>
       <p class="note-q" id="doneQ">All done?</p>
       <div class="note-actions col">
-        <button class="note-btn primary" id="donePrimary">All done</button>
-        <button class="note-btn" id="doneSecondary">Need more time</button>
+      <button class="note-btn primary" id="donePrimary">All done</button>
+      <button class="note-btn" id="doneSecondary">Need more time</button>
       </div>
-    </div>
-  </div>
+      </div>
+      </div>
+      </div>
     </main>
 
     <div class="coils-front" id="coilsFront" aria-hidden="true"></div>
@@ -1420,6 +1434,7 @@
   /* ---- new sheet ---- */
 
   function startSheet(carried) {
+    resetNotePosition();
     todos = carried;
     pickedId = null;
     inputEl.value = '';
@@ -1945,6 +1960,57 @@
   }
 
   document.getElementById('noteStop').addEventListener('click', completeCurrent);
+
+  /* ---- dragging the notes ---- */
+
+  const layerEl = document.getElementById('notesLayer');
+  let noteOffset = { x: 0, y: 0 };
+  let drag = null;
+
+  function placeLayer() {
+    layerEl.style.transform = 'translate(' + noteOffset.x + 'px,' + noteOffset.y + 'px)';
+  }
+
+  function dragBounds() {
+    return {
+      x: Math.max(120, pageEl.offsetWidth / 2 - 40),
+      y: Math.max(120, pageEl.offsetHeight / 2 - 30)
+    };
+  }
+
+  layerEl.addEventListener('pointerdown', e => {
+    /* let the controls do their job */
+    if (e.target.closest('button, input, select, textarea, a')) return;
+    const note = e.target.closest('.postit');
+    if (!note || note.hidden) return;
+
+    drag = { id: e.pointerId, x: e.clientX, y: e.clientY, ox: noteOffset.x, oy: noteOffset.y };
+    layerEl.classList.add('dragging');
+    layerEl.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+
+  layerEl.addEventListener('pointermove', e => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const limit = dragBounds();
+    noteOffset.x = Math.max(-limit.x, Math.min(limit.x, drag.ox + (e.clientX - drag.x)));
+    noteOffset.y = Math.max(-limit.y, Math.min(limit.y, drag.oy + (e.clientY - drag.y)));
+    placeLayer();
+  });
+
+  function endDrag(e) {
+    if (!drag || (e && e.pointerId !== drag.id)) return;
+    drag = null;
+    layerEl.classList.remove('dragging');
+  }
+  layerEl.addEventListener('pointerup', endDrag);
+  layerEl.addEventListener('pointercancel', endDrag);
+
+  /* a torn-off sheet starts the notes back in the middle */
+  function resetNotePosition() {
+    noteOffset = { x: 0, y: 0 };
+    placeLayer();
+  }
 
   /* ---- creativity mode ---- */
 
