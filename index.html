@@ -707,6 +707,12 @@
   }
   .set-row .unit { color: var(--pencil); font-size: 15px; margin-left: -8px; }
   .set-row.toggle { cursor: pointer; }
+  .set-note {
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--pencil);
+    margin: -4px 0 16px;
+  }
   .set-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--ink); cursor: pointer; }
 
   /* the running note recedes while the choice is open */
@@ -978,10 +984,10 @@
     </div>
 
     <div id="noteDone" hidden>
-      <p class="note-q">All done?</p>
-      <div class="note-actions">
-        <button class="note-btn primary" id="noteFinish">All done</button>
-        <button class="note-btn" id="noteMore">Need more time</button>
+      <p class="note-q" id="doneQ">All done?</p>
+      <div class="note-actions col">
+        <button class="note-btn primary" id="donePrimary">All done</button>
+        <button class="note-btn" id="doneSecondary">Need more time</button>
       </div>
     </div>
   </div>
@@ -1012,6 +1018,10 @@
   <label class="set-row toggle">Allow manual selection
     <input type="checkbox" id="setManual">
   </label>
+  <label class="set-row toggle">Strict pomodoro
+    <input type="checkbox" id="setStrict">
+  </label>
+  <p class="set-note">Strict: one task per pomodoro, no extensions, a short break after every session and a long one after <span id="strictCount">4</span>.</p>
   <div class="actions">
     <button class="roll" id="setSave">Save</button>
     <button class="cancel" id="setCancel">Cancel</button>
@@ -1110,6 +1120,7 @@
     out.creativeAfter = clamp(value.creativeAfter, 1, 20, DEFAULTS.creativeAfter);
     out.creativeLen = clamp(value.creativeLen, 1, 120, DEFAULTS.creativeLen);
     out.manual = value.manual === undefined ? DEFAULTS.manual : !!value.manual;
+    out.strict = !!value.strict;
     return out;
   }
 
@@ -1125,6 +1136,7 @@
           settings = normalizeSettings(data.settings);
           creative = !!data.creative;
           completedCount = Number.isFinite(data.completed) ? data.completed : 0;
+          pomodoroCount = Number.isFinite(data.pomodoros) ? data.pomodoros : 0;
           pendingTimer = (data.timer && typeof data.timer === 'object') ? data.timer : null;
         }
       } catch (e) {
@@ -1152,9 +1164,11 @@
       notePrevEl.hidden = true;
     }
 
-    inCreativeSession = !!t.creativeSession;
-    postitEl.classList.toggle('creative', inCreativeSession);
-    squeezeEl.hidden = inCreativeSession;
+    sessionKind = t.kind || (t.creativeSession ? 'creative' : 'work');
+    extensionUsed = !!t.extensionUsed;
+    lastWorkTodoId = t.lastWorkTodoId || t.todoId || null;
+    postitEl.classList.toggle('creative', sessionKind !== 'work');
+    squeezeEl.hidden = sessionKind !== 'work' || settings.strict;
     sessionLen = Math.max(1, t.sessionLen || settings.pomodoro * 60);
 
     postitEl.hidden = false;
@@ -1192,7 +1206,9 @@
       todoId: noteTodoId,
       task: noteTaskEl.textContent,
       prev: notePrevEl.hidden ? null : notePrevEl.textContent,
-      creativeSession: inCreativeSession,
+      kind: sessionKind,
+      extensionUsed: extensionUsed,
+      lastWorkTodoId: lastWorkTodoId,
       sessionLen: sessionLen,
       left: left,
       endsAt: running ? endsAt : null
@@ -1205,6 +1221,7 @@
       settings: settings,
       creative: creative,
       completed: completedCount,
+      pomodoros: pomodoroCount,
       timer: timerSnapshot()
     }));
   }
@@ -1537,14 +1554,19 @@
 
   /* ---- post-it pomodoro ---- */
 
-  const DEFAULTS = { pomodoro: 25, creativeAfter: 4, creativeLen: 15, manual: true };
+  const DEFAULTS = { pomodoro: 25, creativeAfter: 4, creativeLen: 15, manual: true, strict: false };
+  const SHORT_BREAK = 5 * 60;
   let settings = Object.assign({}, DEFAULTS);
   let creative = false;
   let completedCount = 0;
   let creativeDue = false;
   let sessionLen = DEFAULTS.pomodoro * 60;
+  const EXTENSION = 5 * 60;
   let pendingTimer = null;
-  let inCreativeSession = false;
+  let sessionKind = 'work';        /* work | short | long | creative */
+  let extensionUsed = false;
+  let pomodoroCount = 0;
+  let lastWorkTodoId = null;
 
   const postitEl = document.getElementById('postit');
   const noteTaskEl = document.getElementById('noteTask');
@@ -1585,9 +1607,11 @@
   }
 
   function showNote(todo) {
-    inCreativeSession = false;
+    sessionKind = 'work';
+    extensionUsed = false;
+    lastWorkTodoId = todo.id;
     postitEl.classList.remove('creative');
-    squeezeEl.hidden = false;
+    squeezeEl.hidden = settings.strict;
     inviteEl.hidden = true;
     noteTodoId = todo.id;
     noteTaskEl.textContent = todo.text;
@@ -1609,8 +1633,8 @@
     left = 0;
     chooserEl.hidden = true;
     postitEl.classList.remove('dimmed', 'creative');
-    inCreativeSession = false;
-    squeezeEl.hidden = false;
+    sessionKind = 'work';
+    squeezeEl.hidden = settings.strict;
     stopChoosingByHand();
     postitEl.hidden = true;
     postitEl.classList.remove('paused', 'ding');
@@ -1669,6 +1693,8 @@
     postitEl.classList.remove('dimmed');
     stopChoosingByHand();
     paint();
+    if (sessionKind === 'work') pomodoroCount += 1;
+    configureDone();
     noteState('done');
     postitEl.classList.remove('paused');
     postitEl.classList.add('ding');
@@ -1716,7 +1742,84 @@
   document.getElementById('noteClose').addEventListener('click', hideNote);
   pauseEl.addEventListener('click', togglePause);
 
-  document.getElementById('noteMore').addEventListener('click', () => startTimer(sessionLen));
+  const doneQEl = document.getElementById('doneQ');
+  const donePrimaryEl = document.getElementById('donePrimary');
+  const doneSecondaryEl = document.getElementById('doneSecondary');
+  let doneActions = { primary: null, secondary: null };
+
+  function setDoneChoice(question, primary, secondary) {
+    doneQEl.textContent = question;
+    donePrimaryEl.textContent = primary.label;
+    donePrimaryEl.hidden = false;
+    doneActions.primary = primary.run;
+    if (secondary) {
+      doneSecondaryEl.textContent = secondary.label;
+      doneSecondaryEl.hidden = false;
+      doneActions.secondary = secondary.run;
+    } else {
+      doneSecondaryEl.hidden = true;
+      doneActions.secondary = null;
+    }
+  }
+
+  const ALL_DONE = { label: 'All done', run: () => completeCurrent() };
+  const CLOSE_NOTE = { label: 'Close', run: () => hideNote() };
+  const MORE_TIME = {
+    label: 'Need more time',
+    run: () => { extensionUsed = true; startTimer(EXTENSION); }
+  };
+
+  function breakChoice() {
+    const longDue = pomodoroCount >= settings.creativeAfter;
+    if (longDue) {
+      return {
+        label: 'Take a long break',
+        run: () => {
+          pomodoroCount = 0;
+          if (creative) { postitEl.hidden = true; inviteEl.hidden = false; }
+          else startBreak('long', settings.creativeLen * 60, 'Long break');
+          save();
+        }
+      };
+    }
+    return {
+      label: 'Take a 5-minute break',
+      run: () => startBreak('short', SHORT_BREAK, 'Short break')
+    };
+  }
+
+  function backToWork() {
+    const todo = todos.find(t => t.id === lastWorkTodoId && !t.done);
+    if (!todo) { hideNote(); return; }
+    hideNote();
+    pickedId = todo.id;
+    render();
+    showNote(todo);
+    primeAudio();
+    startTimer(settings.pomodoro * 60);
+  }
+
+  function configureDone() {
+    if (sessionKind !== 'work') {
+      const todo = todos.find(t => t.id === lastWorkTodoId && !t.done);
+      setDoneChoice(
+        'Break over.',
+        todo ? { label: 'Back to it', run: backToWork } : CLOSE_NOTE,
+        todo ? CLOSE_NOTE : null
+      );
+      return;
+    }
+
+    if (settings.strict) {
+      setDoneChoice('Pomodoro done.', ALL_DONE, breakChoice());
+      return;
+    }
+
+    setDoneChoice('All done?', ALL_DONE, extensionUsed ? breakChoice() : MORE_TIME);
+  }
+
+  donePrimaryEl.addEventListener('click', () => doneActions.primary && doneActions.primary());
+  doneSecondaryEl.addEventListener('click', () => doneActions.secondary && doneActions.secondary());
 
   /* hand the note its next task, keeping one crossed-off line above it */
   function noteNext(todo) {
@@ -1827,21 +1930,20 @@
 
   function completeCurrent() {
     const todo = todos.find(t => t.id === noteTodoId);
-    const wasCreative = inCreativeSession;
+    const wasBreak = sessionKind !== 'work';
     markDone(todo);
     hideNote();
     if (todo) {
       render();
       save();
       doneMessage();
-    } else if (wasCreative) {
+    } else if (wasBreak) {
       resultEl.className = 'result note';
       resultEl.textContent = 'Back to it.';
     }
     offerCreativeBreak();
   }
 
-  document.getElementById('noteFinish').addEventListener('click', completeCurrent);
   document.getElementById('noteStop').addEventListener('click', completeCurrent);
 
   /* ---- creativity mode ---- */
@@ -1851,6 +1953,9 @@
     modeLabelEl.textContent = creative ? 'Go back to regular mode' : 'Enter creativity mode?';
     hintEl.hidden = !settings.manual;
     manualBtnEl.hidden = !settings.manual;
+    /* strict keeps one task per pomodoro, so no squeezing another in */
+    if (settings.strict) squeezeEl.hidden = true;
+    else if (sessionKind === 'work') squeezeEl.hidden = false;
   }
 
   document.getElementById('modeToggle').addEventListener('click', () => {
@@ -1865,22 +1970,27 @@
       : 'Back to regular mode.';
   });
 
-  function startCreativeSession() {
+  function startBreak(kind, seconds, label) {
     inviteEl.hidden = true;
-    inCreativeSession = true;
+    sessionKind = kind;
+    extensionUsed = false;
     noteTodoId = null;
     postitEl.classList.add('creative');
     postitEl.classList.remove('dimmed');
-    noteTaskEl.textContent = 'Creativity break';
+    noteTaskEl.textContent = label;
     noteTaskEl.classList.remove('empty');
     notePrevEl.hidden = true;
     squeezeEl.hidden = true;
     postitEl.hidden = false;
     primeAudio();
-    startTimer(settings.creativeLen * 60);
+    startTimer(seconds);
     try {
       postitEl.scrollIntoView({ block: 'center', behavior: reduced() ? 'auto' : 'smooth' });
     } catch (e) {}
+  }
+
+  function startCreativeSession() {
+    startBreak('creative', settings.creativeLen * 60, 'Creativity break');
   }
 
   document.getElementById('inviteYes').addEventListener('click', startCreativeSession);
@@ -1897,6 +2007,8 @@
     document.getElementById('setCount').value = settings.creativeAfter;
     document.getElementById('setCreative').value = settings.creativeLen;
     document.getElementById('setManual').checked = settings.manual;
+    document.getElementById('setStrict').checked = settings.strict;
+    document.getElementById('strictCount').textContent = settings.creativeAfter;
     settingsDlg.showModal();
   });
 
@@ -1911,12 +2023,15 @@
     settings.creativeAfter = num('setCount', 1, 20, DEFAULTS.creativeAfter);
     settings.creativeLen = num('setCreative', 1, 120, DEFAULTS.creativeLen);
     settings.manual = document.getElementById('setManual').checked;
+    settings.strict = document.getElementById('setStrict').checked;
     settingsDlg.close();
     applyMode();
     render();
     save();
     resultEl.className = 'result note';
-    resultEl.textContent = 'Settings saved.';
+    resultEl.textContent = settings.strict
+      ? 'Settings saved. Strict pomodoro is on.'
+      : 'Settings saved.';
   });
 
   /* pick a task by hand instead of by die */
